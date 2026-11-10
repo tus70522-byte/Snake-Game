@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#141226">
+  <title>Berry Snake</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- ===== Top bar: score, high score, and the three utility buttons ===== -->
+  <header class="topbar">
+    <div class="stats">
+      <div class="stat" title="Score">
+        <!-- Berry icon -->
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <circle cx="12" cy="14" r="8" fill="#ff5d73"/>
+          <circle cx="9" cy="11" r="2.2" fill="#ffffff" opacity=".45"/>
+          <path d="M12 7c0-3 2-5 5-5 0 3-2 5-5 5z" fill="#b8f06a"/>
+        </svg>
+        <span class="sr-only">Score</span>
+        <span id="score" class="stat-value">0</span>
+      </div>
+      <div class="stat" title="High score">
+        <!-- Trophy icon -->
+        <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M7 3h10v6a5 5 0 0 1-10 0V3z" fill="#ffd166"/>
+          <path d="M7 5H3v2a4 4 0 0 0 4 4M17 5h4v2a4 4 0 0 1-4 4" fill="none" stroke="#ffd166" stroke-width="2"/>
+          <path d="M11 14h2v4h-2z" fill="#ffd166"/>
+          <rect x="7" y="18" width="10" height="3" rx="1" fill="#ffd166"/>
+        </svg>
+        <span class="sr-only">High score</span>
+        <span id="best" class="stat-value">0</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button id="btn-pause" class="icon-btn" type="button" aria-label="Pause">
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <rect x="6" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+          <rect x="14" y="5" width="4" height="14" rx="1.5" fill="currentColor"/>
+        </svg>
+      </button>
+      <button id="btn-mute" class="icon-btn" type="button" aria-label="Mute sound" aria-pressed="false">
+        <!-- The two "state" groups are toggled from CSS via aria-pressed -->
+        <svg viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/>
+          <g class="sound-on" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M16.5 9a4 4 0 0 1 0 6"/>
+            <path d="M19 6.5a8 8 0 0 1 0 11"/>
+          </g>
+          <g class="sound-off" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <path d="M16.5 9.5l5 5M21.5 9.5l-5 5"/>
+          </g>
+        </svg>
+      </button>
+      <button id="btn-settings" class="icon-btn" type="button" aria-label="Settings">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M4 7h16M4 12h16M4 17h16"/>
+          <circle cx="9" cy="7" r="2.2" fill="#141226"/>
+          <circle cx="15" cy="12" r="2.2" fill="#141226"/>
+          <circle cx="8" cy="17" r="2.2" fill="#141226"/>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- ===== Stage: the canvas plus the overlays that sit on top of it ===== -->
+  <main id="stage" class="stage">
+    <canvas id="board" aria-label="Snake game board"></canvas>
+
+    <!-- Start screen -->
+    <section id="overlay-start" class="overlay">
+      <div class="card">
+        <h1>Berry Snake</h1>
+        <p class="hint">Press any arrow key to start</p>
+        <button id="btn-play" class="primary" type="button">Play</button>
+        <p class="subhint">Arrows or WASD to steer &middot; swipe on touch &middot; P to pause</p>
+      </div>
+    </section>
+
+    <!-- Pause screen -->
+    <section id="overlay-pause" class="overlay" hidden>
+      <div class="card">
+        <h2>Paused</h2>
+        <button id="btn-resume" class="primary" type="button">Resume</button>
+        <p class="subhint">Space, P or Esc to continue</p>
+      </div>
+    </section>
+
+    <!-- Game over / win screen (title text is swapped from JS) -->
+    <section id="overlay-end" class="overlay" hidden>
+      <div class="card">
+        <h2 id="end-title">Game over</h2>
+        <div class="results">
+          <div><span class="results-label">Score</span><span id="end-score" class="results-value">0</span></div>
+          <div><span class="results-label">Best</span><span id="end-best" class="results-value">0</span></div>
+        </div>
+        <p id="end-record" class="record" hidden>New high score!</p>
+        <button id="btn-again" class="primary" type="button">Play again</button>
+        <p class="subhint">Space or Enter to restart</p>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section id="overlay-settings" class="overlay" hidden>
+      <div class="card settings" role="dialog" aria-label="Settings">
+        <h2>Settings</h2>
+
+        <div class="setting">
+          <span class="setting-label">Speed</span>
+          <div class="segmented" data-setting="speed">
+            <button type="button" data-value="slow">Slow</button>
+            <button type="button" data-value="normal">Normal</button>
+            <button type="button" data-value="fast">Fast</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <span class="setting-label">Board size</span>
+          <div class="segmented" data-setting="board">
+            <button type="button" data-value="small">Small</button>
+            <button type="button" data-value="medium">Medium</button>
+            <button type="button" data-value="large">Large</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <span class="setting-label">Berries on the board</span>
+          <div class="segmented" data-setting="fruit">
+            <button type="button" data-value="1">1</button>
+            <button type="button" data-value="3">3</button>
+            <button type="button" data-value="5">5</button>
+          </div>
+        </div>
+
+        <div class="setting">
+          <span class="setting-label">Walls</span>
+          <div class="segmented" data-setting="wrap">
+            <button type="button" data-value="false">Solid</button>
+            <button type="button" data-value="true">Wrap around</button>
+          </div>
+        </div>
+
+        <p class="subhint">Changing board size, berries or walls starts a new game.</p>
+        <button id="btn-settings-done" class="primary" type="button">Done</button>
+      </div>
+    </section>
+  </main>
+
+  <script src="game.js"></script>
+</body>
+</html>

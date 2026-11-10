@@ -1,0 +1,257 @@
+/* ==========================================================================
+   Berry Snake — styles
+   The canvas does all the in-game drawing; this file only styles the page
+   shell: top bar, stage, overlays and the settings controls.
+   ========================================================================== */
+
+:root {
+  --bg: #141226;          /* page background */
+  --panel: #1f1c3a;       /* top bar and cards */
+  --panel-edge: #34305e;  /* hairline borders */
+  --text: #f1eeff;
+  --text-dim: #a9a3d1;
+  --accent: #6ff0c8;      /* mint — matches the snake */
+  --accent-ink: #0c2b26;  /* text on top of the accent colour */
+  --berry: #ff5d73;
+  --gold: #ffd166;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  /* Column layout: top bar on top, the stage takes all remaining height. */
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100dvh;
+  padding: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--text);
+  font-family: ui-rounded, "SF Pro Rounded", "Nunito", "Segoe UI", system-ui, sans-serif;
+  overflow: hidden;                 /* the game never scrolls */
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+}
+
+/* Text only for screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Top bar ---------- */
+
+.topbar {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 8px 10px 8px 16px;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: var(--radius);
+}
+
+.stats { display: flex; gap: 22px; }
+
+.stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.35rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums; /* digits don't jiggle as the score grows */
+}
+
+.icon { width: 26px; height: 26px; }
+
+.actions { display: flex; gap: 4px; }
+
+.icon-btn {
+  display: grid;
+  place-items: center;
+  width: 44px; height: 44px;        /* comfortable touch target */
+  padding: 0;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+.icon-btn svg { width: 24px; height: 24px; }
+.icon-btn:hover { color: var(--text); background: rgba(255, 255, 255, .07); }
+
+/* Mute button shows waves when sound is on and a cross when muted. */
+#btn-mute .sound-off { display: none; }
+#btn-mute[aria-pressed="true"] .sound-on { display: none; }
+#btn-mute[aria-pressed="true"] .sound-off { display: inline; }
+
+/* ---------- Stage ---------- */
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;                    /* lets the flex child actually shrink */
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  touch-action: none;               /* swipes steer the snake, not the page */
+}
+
+#board {
+  display: block;
+  border-radius: 12px;
+  box-shadow: 0 0 0 4px var(--panel), 0 12px 40px rgba(0, 0, 0, .45);
+  /* width/height are set from JS so the tiles stay perfectly square */
+}
+
+/* ---------- Overlays (start, pause, game over, settings) ---------- */
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  background: rgba(20, 18, 38, .62);
+  overflow-y: auto;
+  animation: fade-in .18s ease-out;
+}
+.overlay[hidden] { display: none; }
+
+.card {
+  width: min(100%, 340px);
+  padding: 24px 22px;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--panel-edge);
+  border-radius: 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, .5);
+  animation: card-in .22s cubic-bezier(.2, 1.3, .4, 1);
+}
+
+h1, h2 {
+  margin: 0 0 6px;
+  line-height: 1.1;
+  letter-spacing: -.01em;
+  text-wrap: balance;
+}
+h1 { font-size: 2.1rem; color: var(--accent); }
+h2 { font-size: 1.7rem; }
+
+.hint { margin: 0 0 18px; color: var(--text-dim); }
+.subhint { margin: 14px 0 0; font-size: .82rem; color: var(--text-dim); }
+
+.primary {
+  min-width: 170px;
+  padding: 13px 26px;
+  font: inherit;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform .1s ease, filter .1s ease;
+}
+.primary:hover { filter: brightness(1.08); }
+.primary:active { transform: scale(.96); }
+
+button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Final score block on the game-over card */
+.results {
+  display: flex;
+  justify-content: center;
+  gap: 34px;
+  margin: 14px 0 18px;
+}
+.results > div { display: flex; flex-direction: column; }
+.results-label {
+  font-size: .78rem;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.results-value {
+  font-size: 2.2rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+.record { margin: -6px 0 16px; font-weight: 700; color: var(--gold); }
+
+/* ---------- Settings ---------- */
+
+.settings { width: min(100%, 380px); text-align: left; }
+.settings h2 { text-align: center; margin-bottom: 16px; }
+.settings .primary { display: block; margin: 18px auto 0; }
+.settings .subhint { text-align: center; }
+
+.setting { margin-bottom: 14px; }
+.setting-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: .85rem;
+  font-weight: 700;
+  color: var(--text-dim);
+}
+
+/* A row of buttons where exactly one is "pressed" */
+.segmented {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  background: var(--bg);
+  border-radius: 12px;
+}
+.segmented button {
+  flex: 1;
+  padding: 9px 6px;
+  font: inherit;
+  font-weight: 700;
+  color: var(--text-dim);
+  background: transparent;
+  border: 0;
+  border-radius: 9px;
+  cursor: pointer;
+}
+.segmented button:hover { color: var(--text); }
+.segmented button[aria-pressed="true"] {
+  color: var(--accent-ink);
+  background: var(--accent);
+}
+
+/* ---------- Motion ---------- */
+
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes card-in { from { opacity: 0; transform: scale(.92); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .overlay, .card { animation: none; }
+  .primary { transition: none; }
+}
+
+/* Very small phones: tighten things up a little */
+@media (max-width: 380px) {
+  body { padding: 8px; gap: 8px; }
+  .stat { font-size: 1.15rem; }
+  .stats { gap: 14px; }
+  .icon-btn { width: 40px; height: 40px; }
+}
